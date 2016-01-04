@@ -1,0 +1,4 @@
+%{"dialyxir": {:git, "https://github.com/jeremyjh/dialyxir.git", "995d9837ca3346f6dcd842437dac735ff23051d1", []},
+  "inch_ex": {:hex, :inch_ex, "0.4.0"},
+  "monad": {:hex, :monad, "1.0.5"},
+  "poison": {:hex, :poison, "1.5.0"}}
