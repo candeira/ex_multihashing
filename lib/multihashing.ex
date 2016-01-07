@@ -85,7 +85,7 @@ defmodule Multihashing do
   Decode the provided multihash value to the struct %Multihash{code: , name: , length: , digest: }
 
       iex> Multihashing.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
-      {:ok, %Multihash{name: "sha1", code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
+      {:ok, %Multihash{name: :sha1, code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
 
   Invalid multihash values will result in errors.
 
@@ -187,8 +187,8 @@ defmodule Multihashing do
 
   ## Used by verify()
 
-  defp reencode(%Multihash{name: name, length: length}, data) do
-    Multihashing.hash(String.to_atom(name), data, length)
+  def reencode(%Multihash{name: name, length: length}, data) do
+    Multihashing.hash(name, data, length)
   end
 
   defp equals(data1, data2) do
