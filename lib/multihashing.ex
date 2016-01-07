@@ -4,8 +4,6 @@ defmodule Multihashing do
   """
 
   import Multihash
-  require Monad.Error
-  import Monad.Error
 
   @type crypto_hash_type :: :sha | :sha256 | :sha512 | :sha3 | :blake2b | :blake2s
 
@@ -74,11 +72,8 @@ defmodule Multihashing do
 
   @spec hash(crypto_hash_type, binary, Multihash.default_integer) :: Multihash.on_encode
   def hash(hash_id, data, length) when is_binary(data) do
-    Monad.Error.p do
-      {:ok, hash_id}
-    |> get_hash_func_name_pair
-    |> make_multihash(data, length)
-    end
+    with {:ok, hash_func_name_pair} <- get_hash_func_name_pair(hash_id),
+         do: make_multihash(hash_func_name_pair, data, length)
   end
 
   @doc """
@@ -86,6 +81,9 @@ defmodule Multihashing do
 
       iex> Multihashing.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
       {:ok, %Multihash{name: :sha1, code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
+
+  iex> Multihashing.decode(<<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>)
+  {:ok, %Multihash{name: :sha1, code: 17, length: 10, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}}
 
   Invalid multihash values will result in errors.
 
@@ -134,12 +132,9 @@ defmodule Multihashing do
   """
   @spec verify(binary, binary) :: boolean
   def verify(multihash, data) do
-    Monad.Error.p do
-      {:ok, multihash}
-      |> Multihash.decode
-      |> reencode(data)
-      |> equals(multihash)
-    end
+    with {:ok, mh} <- Multihash.decode(multihash),
+         {:ok, reencoded} <- reencode(mh, data),
+         do: {:ok, reencoded == multihash}
   end
 
 
@@ -151,48 +146,39 @@ defmodule Multihashing do
     func? = Map.get(@hash_name_to_func, hash_id, :func_not_found)
     name? = Map.get(@hash_func_to_name, hash_id, :name_not_found)
     case {func?, name?} do
-      {:func_not_found, :name_not_found} -> Monad.Error.fail @error_invalid_hash_function
-      {:func_not_found, _} -> Monad.Error.return {hash_id, name?}
-      {_, :name_not_found} -> Monad.Error.return {func?, hash_id}
-      {_, _} -> Monad.Error.return {func?, name?}
+      {:func_not_found, :name_not_found} ->  {:error, @error_invalid_hash_function}
+      {:func_not_found, _} -> {:ok, {hash_id, name?}}
+      {_, :name_not_found} -> {:ok, {func?, hash_id}}
+      {_, _} -> {:ok, {func?, name?}}
     end
   end
 
   defp make_multihash({hash_func, hash_name}, data, length) when is_binary(data) do
-    Monad.Error.p do
-      {:ok, hash_func}
-      |> make_digest(data)
-      |> pack_digest_with(hash_name, length)
-    end
+    with {:ok, digest} <- make_digest(hash_func, data),
+         do: Multihash.encode(hash_name, digest, length)
   end
 
   defp make_digest(hash_func, data) when is_atom(hash_func) and is_binary(data) do
     case hash_func do
-      :sha -> Monad.Error.return :crypto.hash(:sha, data)
-      :sha256 -> Monad.Error.return :crypto.hash(:sha256, data)
-      :sha512 -> Monad.Error.return :crypto.hash(:sha512, data)
-      :sha3 -> Monad.Error.fail @error_unimplemented
-      :blake2b -> Monad.Error.fail @error_unimplemented
-      :blake2s -> Monad.Error.fail @error_unimplemented
-      _ -> Monad.Error.fail @error_invalid_hash_function
+      :sha -> {:ok, :crypto.hash(:sha, data)}
+      :sha256 -> {:ok, :crypto.hash(:sha256, data)}
+      :sha512 -> {:ok, :crypto.hash(:sha512, data)}
+      :sha3 -> {:error, @error_unimplemented}
+      :blake2b -> {:error, @error_unimplemented}
+      :blake2s -> {:error, @error_unimplemented}
+      _ -> {:error, @error_invalid_hash_function}
     end
   end
 
   defp pack_digest_with(digest, hash_name, length) when is_binary(digest) and is_atom(hash_name) do
-    Monad.Error.p do
-      {:ok, hash_name}
-      |> Multihash.encode(digest, length)
-    end
+      Multihash.encode(hash_name, digest, length)
   end
 
   ## Used by verify()
 
-  def reencode(%Multihash{name: name, length: length}, data) do
+  defp reencode(%Multihash{name: name, length: length}, data) do
     Multihashing.hash(name, data, length)
   end
 
-  defp equals(data1, data2) do
-    Monad.Error.return data1 == data2
-  end
-
 end
+

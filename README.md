@@ -48,7 +48,7 @@ The present repo is an example of README-driven development. At present, this is
     - [x] hash()
     - [x] decode()
     - [x] verify()
-- [ ] Rewrite the above to avoid depending on Monad.Error, use 1.2's `with` special form instead. (thanks, @chrismccord!)
+- [x] Rewrite/refactor the above to avoid depending on Monad.Error, use 1.2's `with` special form instead. (thanks, @chrismccord!)
 - [ ] :crypto compat: add partial encoding via the `init/update/final` suite.
 - [ ] :crypto compat: a Multihashing.MultihashCrypto module that exposes unwrapped values and throws exceptions instead of returning `{:error, message}`
 - [ ] Add new test data for missing hashing algorithms (sha-3, blake2b, blake2s)

@@ -1,5 +1,5 @@
 %{"dialyxir": {:git, "https://github.com/jeremyjh/dialyxir.git", "995d9837ca3346f6dcd842437dac735ff23051d1", []},
   "inch_ex": {:hex, :inch_ex, "0.4.0"},
   "monad": {:hex, :monad, "1.0.5"},
-  "multihash": {:git, "https://github.com/candeira/ex_multihash.git", "47cdfbcc6c354f9a853c514e104db7efba330ab8", [branch: "develop"]},
+  "multihash": {:git, "https://github.com/candeira/ex_multihash.git", "8c94b04744e1c61f730d4b9c77e19bf90dda075b", [branch: "develop"]},
   "poison": {:hex, :poison, "1.5.0"}}
