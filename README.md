@@ -12,10 +12,9 @@ Multihashing is a port of Juan Benet's [js-multihashing](https://github.com/jben
 It makes extensive use of Zohaib Rauf's original [ex_multihash](https://github.com/zabirauf/ex_multihash) library, as well as learning a few tricks from it (thanks!).
 
 # Rationale for this library
+Values are generally read more often than written, so the most performed operation on multihashes will be verification via the sequence: 1. Obtain multihash > 2. Request blob > 3. Compare that multihash and blob match. So we add a verify() function.
 
-The most performed operation on multihashes will be verification. Values are generally read more often than written, so this is the modal usage of multihashes: Obtain multihash > request blob > verify that multihash and blob match.
-
-The second most performed operation will be writing hashes. Barely anybody will decode hashes except for verification, but someone has to hash the values for new data added to the IPFS network, right?
+The second most performed operation will be creating hashes. Hashes will only be decoded for verification and fetching, but someone has to hash the values for new data added to the IPFS network, right? We should make creating hashes as easy as possible.
 
 The high level library should also expose a decode function, so there is no reason to import the lower level Multihash library.
 
