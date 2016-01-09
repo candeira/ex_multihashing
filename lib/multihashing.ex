@@ -4,6 +4,7 @@ defmodule Multihashing do
   """
 
   import Multihash
+  import :sha3
 
   @type crypto_hash_type :: :sha | :sha256 | :sha512 | :sha3 | :blake2b | :blake2s
 
@@ -50,6 +51,9 @@ defmodule Multihashing do
       iex> Multihashing.hash(:sha2_256, "Hello")
       {:ok, <<18, 32, 24, 95, 141, 179, 34, 113, 254, 37, 245, 97, 166, 252, 147, 139, 46, 38, 67, 6, 236, 48, 78, 218, 81, 128, 7, 209, 118, 72, 38, 56, 25, 105>>}
 
+      iex> Multihashing.hash(:sha3, "Hello", 10)
+      {:ok, <<20, 10, 195, 63, 237, 225, 138, 26, 229, 61, 219, 134>>}
+
   An invalid `hash_func` or a `length` longer than the default of the digest length corresponding
   to the hash function will return an error
 
@@ -63,17 +67,54 @@ defmodule Multihashing do
       iex> Multihashing.hash(:sha1, "Hello", 30)
       {:error, "Invalid truncation length is longer than digest"}
 
-  The digest algorithms `sha3`, `blake2b` and `blake2s` are still unimplemented.
+  The digest algorithms blake2b` and `blake2s` are still unimplemented.
 
       iex> Multihashing.hash(:blake2b, "Hello")
       {:error, "Unimplemented hash function"}
   """
-  def hash(hash_func, data, length \\ :default)
+  def hash(hash_id, data, length \\ :default)
 
   @spec hash(crypto_hash_type, binary, Multihash.default_integer) :: Multihash.on_encode
   def hash(hash_id, data, length) when is_binary(data) do
-    with {:ok, hash_func_name_pair} <- get_hash_func_name_pair(hash_id),
-         do: make_multihash(hash_func_name_pair, data, length)
+    with {:ok, {hash_func, hash_name}} <- get_hash_func_name_pair(hash_id),
+         {:ok, digest} <- make_digest(hash_func, data),
+         do: Multihash.encode(hash_name, digest, length)
+  end
+
+  @doc """
+  Initialise a context for incremental hashing.
+
+  A context can be initialised empty, by calling `hash_init/1` just with a `hash_id`.
+
+        iex> {:ok, context} = Multihashing.hash_init(:sha1)
+        iex> {:ok, context} = Multihashing.hash_update(context, "Hello")
+        iex> Multihashing.hash_final(context)
+        {:ok, <<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}
+
+  It can also be initialised with an optional binary `data` parameter to update the hash on, and later finalised with an optional `length` parameter.
+
+        iex> {:ok, context} = Multihashing.hash_init(:sha1, "Hell")
+        iex> {:ok, context} = Multihashing.hash_update(context, "o")
+        iex> Multihashing.hash_final(context, 10)
+        {:ok, <<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}
+  """
+  def hash_init(hash_id, data \\ nil)
+
+  # @spec hash(crypto_hash_type, binary) :: :crypto.context # commented out because what type is context?
+  def hash_init(hash_id, data) when is_atom(hash_id) do
+    with {:ok, {hash_func, _}} <- get_hash_func_name_pair(hash_id),
+         do: context_init(hash_func, data)
+  end
+
+  def hash_update(context, data) when is_binary(data) do
+    context_update(context, data)
+  end
+
+  def hash_final(context, length \\ :default) do
+    with {hash_func, _} <- context,
+         {:ok, digest} <- context_final(context),
+         {:ok, {_, hash_name}} <- get_hash_func_name_pair(hash_func),
+         do: Multihash.encode(hash_name, digest, length)
   end
 
   @doc """
@@ -153,25 +194,62 @@ defmodule Multihashing do
     end
   end
 
-  defp make_multihash({hash_func, hash_name}, data, length) when is_binary(data) do
-    with {:ok, digest} <- make_digest(hash_func, data),
-         do: Multihash.encode(hash_name, digest, length)
-  end
-
   defp make_digest(hash_func, data) when is_atom(hash_func) and is_binary(data) do
     case hash_func do
       :sha -> {:ok, :crypto.hash(:sha, data)}
       :sha256 -> {:ok, :crypto.hash(:sha256, data)}
       :sha512 -> {:ok, :crypto.hash(:sha512, data)}
-      :sha3 -> {:error, @error_unimplemented}
+      :sha3 -> {:ok, :sha3.hash(512, data)}
       :blake2b -> {:error, @error_unimplemented}
       :blake2s -> {:error, @error_unimplemented}
       _ -> {:error, @error_invalid_hash_function}
     end
   end
 
-  defp pack_digest_with(digest, hash_name, length) when is_binary(digest) and is_atom(hash_name) do
-      Multihash.encode(hash_name, digest, length)
+  # USED BY hash_init(), hash_update(), hash_final()
+
+  defp context_init(hash_func, data \\ nil) when is_atom(hash_func) do
+    context? = case hash_func do
+      :sha -> {:ok, :crypto.hash_init(:sha)}
+      :sha256 -> {:ok, :crypto.hash_init(:sha256)}
+      :sha512 -> {:ok, :crypto.hash_init(:sha512)}
+      :sha3 -> {:error, @error_unimplemented}
+      # :sha3 -> {:ok, {:sha3, :sha3.hash_init(512)}}
+      :blake2b -> {:error, @error_unimplemented}
+      :blake2s -> {:error, @error_unimplemented}
+      _ -> {:error, @error_invalid_hash_function}
+    end
+    case {context?, data} do
+      {{:error, message}, _} -> {:error, message}
+      {{:ok, context}, nil} -> {:ok, context}
+      {{:ok, context}, _} -> context_update(context, data)
+    end
+  end
+
+  defp context_update({hash_func, innercontext}=context, data) when is_binary(data) and is_atom(hash_func) do
+    case hash_func do
+      :sha -> {:ok, :crypto.hash_update(context, data)}
+      :sha256 -> {:ok, :crypto.hash_update(context, data)}
+      :sha512 -> {:ok, :crypto.hash_update(context, data)}
+      :sha3 -> {:error, @error_unimplemented}
+      # :sha3 -> {:ok, {:sha3, :sha3.hash_update(innercontext, data)}}
+      :blake2b -> {:error, @error_unimplemented}
+      :blake2s -> {:error, @error_unimplemented}
+      _ -> {:error, @error_invalid_hash_function}
+    end
+  end
+
+  defp context_final({hash_func, innercontext} = context) do
+    case hash_func do
+      :sha -> {:ok, :crypto.hash_final(context)}
+      :sha256 -> {:ok, :crypto.hash_final(context)}
+      :sha512 -> {:ok, :crypto.hash_final(context)}
+      :sha3 -> {:error, @error_unimplemented}
+      # :sha3 -> {:ok, {:sha3, :sha3.hash_final(innercontext)}}
+      :blake2b -> {:error, @error_unimplemented}
+      :blake2s -> {:error, @error_unimplemented}
+      _ -> {:error, @error_invalid_hash_function}
+    end
   end
 
   ## Used by verify()

@@ -49,17 +49,21 @@ The present repo is an example of README-driven development. At present, this is
     - [x] decode()
     - [x] verify()
 - [x] Rewrite/refactor the above to avoid depending on Monad.Error, use 1.2's `with` special form instead. (thanks, @chrismccord!)
-- [ ] :crypto compat: add partial encoding via the `init/update/final` suite.
+- [x] :crypto compat: add incremental encoding via the `hash_init/_update/_final` suite.
 - [ ] :crypto compat: a Multihashing.MultihashCrypto module that exposes unwrapped values and throws exceptions instead of returning `{:error, message}`
 - [ ] Add new test data for missing hashing algorithms (sha-3, blake2b, blake2s)
     - [ ] Generate the data and also add it to other projects (go-ipfs, py-ipfs) if it's not there
     - [ ] Figure out sharness and try and put them in there too
-- [ ] Add missing hashing algorithms (sha-3, blake2b, blake2s)
+- [ ] Add missing hashing algorithms (sha-3, blake2b, blake2s) for which libraries can be found
+    - [x] sha3 added using the github.com/szktty/erlang-sha3 NIF library
+- [ ] Add missing hashing algorithms (sha-3, blake2b, blake2s) for which libraries can't be found
     - [ ] Figure out which implementations exist, both in Erlang and C.
     - [ ] Figure out how to do FFI from Elixir to C implementations of blake/sha3
     - [ ] Possibly wrap everything in its own `Crypto_plus` module that extends :crypto with the new algorithms.
 - [ ] Write presentation for Elixir Meetup in Februrary
     - [ ] Make table of library equivalence between Erlang/Python/Ruby
+- [ ] Known issues:
+    - [ ] sha3 library only does all-at-once hashing, but not incremental hashing through hash_init/update/final.
 
 This is very granular so I always have a next task to work on.
 
@@ -70,7 +74,7 @@ Hash the provided `data` with the given `hash_func`, and encode the result into 
 
 An optional parameter `length` allows hash digests to be [truncated](https://github.com/jbenet/multihash/issues/1#issuecomment-91783612).
 
-  For drop-in compatibility with Erlang's Crypto library, Multihashing accepts both the Crypto and the go-multihash names for the algorithms. Thus, the following pairs of hash function names are equivalent: `{:sha, sha1}`, `{:sha256, :sha2_256}`, `{:sha512, "sha2_512"}`.
+For drop-in compatibility with Erlang's Crypto library, Multihashing accepts both the Crypto and the go-multihash names for the algorithms. Thus, the following pairs of hash function names are equivalent: `{:sha, sha1}`, `{:sha256, :sha2_256}`, `{:sha512, "sha2_512"}`.
 
 ### Examples
 
@@ -84,9 +88,11 @@ iex> Multihashing.hash(:sha1, "Hello", 10)
 iex> Multihashing.hash(:sha2_256, "Hello")
 {:ok, <<18, 32, 24, 95, 141, 179, 34, 113, 254, 37, 245, 97, 166, 252, 147, 139, 46, 38, 67, 6, 236, 48, 78, 218, 81, 128, 7, 209, 118, 72, 38, 56, 25, 105>>}
 
-iex> context = Multihashing.hash_init(:sha1)
-iex> Multihashing.hash_update(context, "Hell")
-iex> Multihashing.hash_update(context, "o")
+iex> Multihashing.hash(:sha3, "Hello", 10)
+{:ok, <<20, 10, 195, 63, 237, 225, 138, 26, 229, 61, 219, 134>>}
+
+iex> {:ok, context} = Multihashing.hash_init(:sha1)
+iex> {:ok, context} = Multihashing.hash_update(context, "Hello")
 iex> Multihashing.hash_final(context)
 {:ok, <<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}
 ```
