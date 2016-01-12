@@ -213,8 +213,7 @@ defmodule Multihashing do
       :sha -> {:ok, :crypto.hash_init(:sha)}
       :sha256 -> {:ok, :crypto.hash_init(:sha256)}
       :sha512 -> {:ok, :crypto.hash_init(:sha512)}
-      :sha3 -> {:error, @error_unimplemented}
-      # :sha3 -> {:ok, {:sha3, :sha3.hash_init(512)}}
+      :sha3 -> {:ok, {:sha3, :sha3.hash_init(512)}}
       :blake2b -> {:error, @error_unimplemented}
       :blake2s -> {:error, @error_unimplemented}
       _ -> {:error, @error_invalid_hash_function}
@@ -231,8 +230,7 @@ defmodule Multihashing do
       :sha -> {:ok, :crypto.hash_update(context, data)}
       :sha256 -> {:ok, :crypto.hash_update(context, data)}
       :sha512 -> {:ok, :crypto.hash_update(context, data)}
-      :sha3 -> {:error, @error_unimplemented}
-      # :sha3 -> {:ok, {:sha3, :sha3.hash_update(innercontext, data)}}
+      :sha3 -> {:ok, {:sha3, :sha3.hash_update(innercontext, data)}}
       :blake2b -> {:error, @error_unimplemented}
       :blake2s -> {:error, @error_unimplemented}
       _ -> {:error, @error_invalid_hash_function}
@@ -244,8 +242,7 @@ defmodule Multihashing do
       :sha -> {:ok, :crypto.hash_final(context)}
       :sha256 -> {:ok, :crypto.hash_final(context)}
       :sha512 -> {:ok, :crypto.hash_final(context)}
-      :sha3 -> {:error, @error_unimplemented}
-      # :sha3 -> {:ok, {:sha3, :sha3.hash_final(innercontext)}}
+      :sha3 -> {:ok, :sha3.hash_final(innercontext)}
       :blake2b -> {:error, @error_unimplemented}
       :blake2s -> {:error, @error_unimplemented}
       _ -> {:error, @error_invalid_hash_function}

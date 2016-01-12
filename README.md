@@ -53,16 +53,14 @@ The present repo is an example of README-driven development. At present, this is
 - [ ] Add new test data for missing hashing algorithms (sha-3, blake2b, blake2s)
     - [ ] Generate the data and also add it to other projects (go-ipfs, py-ipfs) if it's not there
     - [ ] Figure out sharness and try and put them in there too
-- [ ] Add missing hashing algorithms (sha-3, blake2b, blake2s) for which libraries can be found
+- [x] Add missing hashing algorithms (sha-3, blake2b, blake2s) for which libraries can be found
     - [x] sha3 added using the github.com/szktty/erlang-sha3 NIF library
-- [ ] Add missing hashing algorithms (sha-3, blake2b, blake2s) for which libraries can't be found
+- [ ] Add missing hashing algorithms (blake2b, blake2s) for which libraries can't be found
     - [ ] Figure out which implementations exist, both in Erlang and C.
     - [ ] Figure out how to do FFI from Elixir to C implementations of blake/sha3
     - [ ] Possibly wrap everything in its own `Crypto_plus` module that extends :crypto with the new algorithms.
 - [ ] Write presentation for Elixir Meetup in Februrary
     - [ ] Make table of library equivalence between Erlang/Python/Ruby
-- [ ] Known issues:
-    - [ ] sha3 library only does all-at-once hashing, but not incremental hashing through hash_init/update/final.
 
 This is very granular so I always have a next task to work on.
 
