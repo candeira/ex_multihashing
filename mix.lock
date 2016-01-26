@@ -1,7 +1,6 @@
-%{"dialyxir": {:git, "https://github.com/jeremyjh/dialyxir.git", "995d9837ca3346f6dcd842437dac735ff23051d1", []},
-  "hex": {:git, "git://github.com/b/hex", "967f059ea49e45b7d0d82e2e1177ef860f5ec4bd", [ref: "HEAD"]},
+%{"dialyxir": {:git, "https://github.com/jeremyjh/dialyxir.git", "8945488a537fd43e86ef6d1bc59f579a082fe0b1", []},
   "inch_ex": {:hex, :inch_ex, "0.4.0"},
   "monad": {:hex, :monad, "1.0.5"},
-  "multihash": {:git, "https://github.com/candeira/ex_multihash.git", "8c94b04744e1c61f730d4b9c77e19bf90dda075b", [branch: "develop"]},
-  "poison": {:hex, :poison, "1.5.0"},
+  "multihash": {:git, "https://github.com/zabirauf/ex_multihash.git", "db59801fb36bdee948c12520ae2dd922305ec1bb", [branch: "master"]},
+  "poison": {:hex, :poison, "1.5.2"},
   "sha3": {:git, "https://github.com/szktty/erlang-sha3.git", "dbdfd12ace2fc7e530e697fef81e1e72e90740f9", []}}

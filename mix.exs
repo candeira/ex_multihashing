@@ -30,7 +30,7 @@ defmodule Multihashing.Mixfile do
     [
       {:monad, "~> 1.0.4"},
       {:dialyxir, github: "jeremyjh/dialyxir"},
-      {:multihash, github: "candeira/ex_multihash", branch: "develop"},
+      {:multihash, github: "zabirauf/ex_multihash", branch: "master"},
       {:inch_ex, only: :docs},
       {:sha3, github: "szktty/erlang-sha3"}
     ]

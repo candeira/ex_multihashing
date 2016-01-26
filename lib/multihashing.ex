@@ -65,7 +65,7 @@ defmodule Multihashing do
       {:error, "Invalid hash function"}
 
       iex> Multihashing.hash(:sha1, "Hello", 30)
-      {:error, "Invalid truncation length is longer than digest"}
+      {:error, "Invalid truncation length"}
 
   The digest algorithms blake2b` and `blake2s` are still unimplemented.
 
@@ -231,6 +231,7 @@ defmodule Multihashing do
       :sha256 -> {:ok, :crypto.hash_update(context, data)}
       :sha512 -> {:ok, :crypto.hash_update(context, data)}
       :sha3 -> {:ok, {:sha3, :sha3.hash_update(innercontext, data)}}
+
       :blake2b -> {:error, @error_unimplemented}
       :blake2s -> {:error, @error_unimplemented}
       _ -> {:error, @error_invalid_hash_function}
